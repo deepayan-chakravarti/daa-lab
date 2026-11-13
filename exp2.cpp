@@ -1,47 +1,81 @@
 #include <iostream>
-#include <vector>
-#include <climits>
 #include <ctime>
 
-int matrixChainOrder(const std::vector<int>& p, int n) {
-    std::vector<std::vector<int>> m(n + 1, std::vector<int>(n + 1, 0));
+using namespace std;
 
-    for (int L = 2; L <= n; ++L) {
-        for (int i = 1; i <= n - L + 1; ++i) {
-            int j = i + L - 1;
-            m[i][j] = INT_MAX;
-            for (int k = i; k <= j - 1; ++k) {
-                int q = m[i][k] + m[k + 1][j] + p[i - 1] * p[k] * p[j];
-                if (q < m[i][j]) {
-                    m[i][j] = q;
+const int INF = 999999999; 
+
+int matrixChainMultiplication(int p[], int size) {
+    int n = size - 1;
+    if (n <= 0) return 0;
+    
+    int dp[100][100] = {0}; 
+    
+    for (int len = 2; len <= n; len++) {
+        for (int i = 0; i <= n - len; i++) {
+            int j = i + len - 1;
+            dp[i][j] = INF;
+            
+            for (int k = i; k < j; k++) {
+                long long cost = (long long)dp[i][k] + dp[k + 1][j] + 
+                                 (long long)p[i] * p[k + 1] * p[j + 1];
+                                 
+                if (cost < dp[i][j]) {
+                    dp[i][j] = cost;
                 }
             }
         }
     }
-    return m[1][n];
+    return dp[0][n - 1];
 }
 
 int main() {
-    std::cout << "Deepayan Chakravarti\n";
-    std::cout << "04714802724\n";
-    int sizes[] = {10, 100, 1000};
-
-    for (int n : sizes) {
-        std::vector<int> p(n + 1);
-        for (int i = 0; i <= n; ++i) {
-            p[i] = (i % 10) + 10;
+    cout<<"Deepayan Chakravarti"<<endl;
+    cout<<"04714802724"<<endl;
+    int repetitions = 100;
+    cout << "Repetitions: " << repetitions << "\n";
+    
+    int sizes[] = {24, 48, 96};
+    double recordedTimes[3];
+    
+    for (int s = 0; s < 3; s++) {
+        int n = sizes[s];
+        int dimensions[100]; 
+        
+        for (int j = 0; j <= n; j++) {
+            dimensions[j] = 5 + j;
         }
-
+        
+        if (s == 0) cout << "\nSmall N (24):\n";
+        else if (s == 1) cout << "\nAverage N (48):\n";
+        else cout << "\nLarge N (96):\n";
+        
+        int minMultiplications = 0;
+        
         clock_t start = clock();
-        int minOps = matrixChainOrder(p, n);
+        for (int r = 0; r < repetitions; r++) {
+            minMultiplications = matrixChainMultiplication(dimensions, n + 1);
+        }
         clock_t end = clock();
-
-        double executionTime = double(end - start) / CLOCKS_PER_SEC;
-
-        std::cout << "N = " << n << "\n";
-        std::cout << "Min Multiplications: " << minOps << "\n";
-        std::cout << "Execution Time: " << executionTime << " s\n\n";
+        
+        double avgTimeMs = (double)(end - start) / CLOCKS_PER_SEC * 1000.0 / repetitions;
+        recordedTimes[s] = avgTimeMs;
+        
+        cout << "Average Time Taken: " << avgTimeMs << " ms\n";
+        cout << "Minimum Multiplications: " << minMultiplications << "\n";
     }
-
+    
+    cout << "\nExperimental Ratios:\n";
+    for (int i = 1; i < 3; i++) {
+        double ratio = recordedTimes[i] / recordedTimes[i - 1];
+        cout << sizes[i - 1] << " -> " << sizes[i] << " : " << ratio << "x\n";
+    }
+    
+    cout << "\nTheoretical Ratios (Cubic Growth):\n";
+    for (int i = 1; i < 3; i++) {
+        double ratio = (double)sizes[i] / sizes[i - 1];
+        double theoretical = ratio * ratio * ratio;
+        cout << sizes[i - 1] << " -> " << sizes[i] << " : " << theoretical << "x\n";
+    }
     return 0;
 }
